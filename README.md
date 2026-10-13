@@ -320,6 +320,10 @@ docker compose up -d
 
 Os volumes Docker preservam os dados entre essas execuções.
 
+## Documentação publicada
+
+[Consultar a documentação do trabalho](https://bfontanayasmin.github.io/trabalhoBancodeDados2/)
+
 ## Referências
 
 - [Projeto-modelo disponibilizado pelo professor](https://github.com/jlsilva01/spark-delta-minio-sqlserver)
