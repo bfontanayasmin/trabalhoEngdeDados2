@@ -114,8 +114,8 @@ uv --version
 ### 2. Baixar o projeto e instalar as dependências
 
 ```bash
-git clone https://github.com/bfontanayasmin/trabalhoBancodeDados2.git
-cd trabalhoBancodeDados2
+git clone https://github.com/bfontanayasmin/trabalhoEngdeDados2.git
+cd trabalhoEngdeDados2
 
 uv python install 3.11.9
 uv sync --locked
