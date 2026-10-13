@@ -1,0 +1,12 @@
+.venv/
+.env
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+site/
+spark-warehouse/
+metastore_db/
+derby.log
+
+# Metadados de arquivos baixados pelo Windows
+*:Zone.Identifier

@@ -1,0 +1,12 @@
+site_name: "Pipeline de dados com SQL Server, MinIO e Delta Lake"
+site_author: "Yasmin Bez Fontana"
+repo_url: "https://github.com/bfontanayasmin/trabalhoBancodeDados2"
+
+theme:
+  name: mkdocs
+
+nav:
+  - Contextualização: index.md
+  - Pipeline de dados: pipeline.md
+  - Operações em Delta Lake: operacoes.md
+  - Tabelas gerenciadas e externas: tabelas.md

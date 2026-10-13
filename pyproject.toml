@@ -1,0 +1,14 @@
+[project]
+name = "trabalho-banco-de-dados-2"
+version = "0.1.0"
+requires-python = ">=3.11.9"
+dependencies = [
+    "boto3>=1.43.113",
+    "delta-spark==3.2.0",
+    "ipykernel==7.4.0",
+    "jupyterlab==4.6.4",
+    "mkdocs==1.6.1",
+    "pymssql==2.4.4",
+    "pyspark==3.5.3",
+    "python-dotenv>=1.2.4",
+]
