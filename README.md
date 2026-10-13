@@ -322,7 +322,7 @@ Os volumes Docker preservam os dados entre essas execuções.
 
 ## Documentação publicada
 
-[Consultar a documentação do trabalho](https://bfontanayasmin.github.io/trabalhoBancodeDados2/)
+[Consultar a documentação do trabalho](https://bfontanayasmin.github.io/trabalhoEngdeDados2/)
 
 ## Referências
 
