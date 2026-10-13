@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="light">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        
+        <meta name="author" content="Yasmin Bez Fontana">
+        
+        <link rel="shortcut icon" href="../img/favicon.ico">
+        <title>Operações em Delta Lake - Pipeline de dados com SQL Server, MinIO e Delta Lake</title>
+        <link href="../css/bootstrap.min.css" rel="stylesheet">
+        <link href="../css/fontawesome.min.css" rel="stylesheet">
+        <link href="../css/brands.min.css" rel="stylesheet">
+        <link href="../css/solid.min.css" rel="stylesheet">
+        <link href="../css/v4-font-face.min.css" rel="stylesheet">
+        <link href="../css/base.css" rel="stylesheet">
+        <link id="hljs-light" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" >
+        <link id="hljs-dark" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github-dark.min.css" disabled>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+        <script>hljs.highlightAll();</script> 
+    </head>
+
+    <body>
+        <div class="navbar fixed-top navbar-expand-lg navbar-dark bg-primary">
+            <div class="container">
+                <a class="navbar-brand" href="..">Pipeline de dados com SQL Server, MinIO e Delta Lake</a>
+                <!-- Expander button -->
+                <button type="button" class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#navbar-collapse" aria-controls="navbar-collapse" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+
+                <!-- Expanded navigation -->
+                <div id="navbar-collapse" class="navbar-collapse collapse">
+                        <!-- Main navigation -->
+                        <ul class="nav navbar-nav">
+                            <li class="nav-item">
+                                <a href=".." class="nav-link">Contextualização</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="../pipeline/" class="nav-link">Pipeline de dados</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="./" class="nav-link active" aria-current="page">Operações em Delta Lake</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="../tabelas/" class="nav-link">Tabelas gerenciadas e externas</a>
+                            </li>
+                        </ul>
+
+                    <ul class="nav navbar-nav ms-md-auto">
+                        <li class="nav-item">
+                            <a href="#" class="nav-link" data-bs-toggle="modal" data-bs-target="#mkdocs_search_modal">
+                                <i class="fa fa-search"></i> Search
+                            </a>
+                        </li>
+                            <li class="nav-item">
+                                <a rel="prev" href="../pipeline/" class="nav-link">
+                                    <i class="fa fa-arrow-left"></i> Previous
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a rel="next" href="../tabelas/" class="nav-link">
+                                    Next <i class="fa fa-arrow-right"></i>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="https://github.com/bfontanayasmin/trabalhoBancodeDados2/edit/master/docs/operacoes.md" class="nav-link"><i class="fa-brands fa-github"></i> Edit on GitHub</a>
+                            </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="container">
+            <div class="row">
+                    <div class="col-md-3"><div class="navbar-expand-md bs-sidebar hidden-print affix" role="complementary">
+    <div class="navbar-header">
+        <button type="button" class="navbar-toggler collapsed" data-bs-toggle="collapse" data-bs-target="#toc-collapse" title="Table of Contents">
+            <span class="fa fa-angle-down"></span>
+        </button>
+    </div>
+
+    
+    <div id="toc-collapse" class="navbar-collapse collapse card bg-body-tertiary">
+        <ul class="nav flex-column">
+            
+            <li class="nav-item" data-bs-level="1"><a href="#operacoes-em-delta-lake" class="nav-link">Operações em Delta Lake</a>
+              <ul class="nav flex-column">
+            <li class="nav-item" data-bs-level="2"><a href="#objetivo" class="nav-link">Objetivo</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="2"><a href="#1-preparacao-da-demonstracao" class="nav-link">1. Preparação da demonstração</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="2"><a href="#2-registro-das-tabelas-para-uso-com-sql" class="nav-link">2. Registro das tabelas para uso com SQL</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="2"><a href="#3-insercao-insert" class="nav-link">3. Inserção — INSERT</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="2"><a href="#4-atualizacao-update" class="nav-link">4. Atualização — UPDATE</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="2"><a href="#5-exclusao-delete" class="nav-link">5. Exclusão — DELETE</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="2"><a href="#6-historico-das-operacoes" class="nav-link">6. Histórico das operações</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="2"><a href="#7-resultado-final" class="nav-link">7. Resultado final</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="2"><a href="#8-reiniciar-a-demonstracao" class="nav-link">8. Reiniciar a demonstração</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="2"><a href="#referencias" class="nav-link">Referências</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+              </ul>
+            </li>
+        </ul>
+    </div>
+</div></div>
+                    <div class="col-md-9" role="main">
+
+<h1 id="operacoes-em-delta-lake">Operações em Delta Lake</h1>
+<h2 id="objetivo">Objetivo</h2>
+<p>O notebook <code>03_dml_delta.ipynb</code> demonstra <code>INSERT</code>, <code>UPDATE</code> e <code>DELETE</code> na tabela de produtos armazenada em Delta Lake no bucket <code>bronze</code>.</p>
+<p>Cada operação apresenta consultas antes e depois da alteração.</p>
+<h2 id="1-preparacao-da-demonstracao">1. Preparação da demonstração</h2>
+<p>Antes das operações, o notebook lê novamente <code>produtos.csv</code> do <code>landing-zone</code> e sobrescreve o conteúdo atual da tabela Delta de produtos:</p>
+<pre><code class="language-python">(
+    spark.read
+    .schema(
+        &quot;id_produto INT, nome_produto STRING, &quot;
+        &quot;preco DECIMAL(10,2), estoque INT, id_categoria INT&quot;
+    )
+    .option(&quot;header&quot;, &quot;true&quot;)
+    .option(&quot;mode&quot;, &quot;FAILFAST&quot;)
+    .csv(&quot;s3a://landing-zone/produtos.csv&quot;)
+    .write
+    .format(&quot;delta&quot;)
+    .mode(&quot;overwrite&quot;)
+    .save(&quot;s3a://bronze/produtos&quot;)
+)
+</code></pre>
+<p>Essa etapa restaura os dez produtos originais, permitindo repetir a demonstração sem acumular registros das execuções anteriores.</p>
+<h2 id="2-registro-das-tabelas-para-uso-com-sql">2. Registro das tabelas para uso com SQL</h2>
+<p>As cinco tabelas Delta são registradas no namespace <code>loja_bronze</code>.</p>
+<p>Para produtos, o registro utiliza:</p>
+<pre><code class="language-sql">CREATE TABLE IF NOT EXISTS loja_bronze.produtos
+USING DELTA
+LOCATION 's3a://bronze/produtos';
+</code></pre>
+<p><code>USING DELTA</code> define o formato. <code>LOCATION</code> aponta para os arquivos existentes no MinIO.</p>
+<p>A tabela é externa (não gerenciada), pois seu caminho foi informado explicitamente.</p>
+<p>Os comandos SQL são executados pelo PySpark:</p>
+<pre><code class="language-python">spark.sql(&quot;&quot;&quot;
+    SELECT * FROM loja_bronze.produtos
+    ORDER BY id_produto
+&quot;&quot;&quot;).show(truncate=False)
+</code></pre>
+<h2 id="3-insercao-insert">3. Inserção — INSERT</h2>
+<p><code>INSERT INTO</code> adiciona registros à tabela.</p>
+<p>Inserimos um Monitor com identificador 11, preço de R$ 449,90, estoque de sete unidades e categoria Informática:</p>
+<pre><code class="language-sql">INSERT INTO loja_bronze.produtos
+    (id_produto, nome_produto, preco, estoque, id_categoria)
+VALUES
+    (11, 'Monitor', 449.90, 7, 1);
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>Situação</th>
+<th style="text-align: right;">Quantidade de produtos</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Antes do INSERT</td>
+<td style="text-align: right;">10</td>
+</tr>
+<tr>
+<td>Depois do INSERT</td>
+<td style="text-align: right;">11</td>
+</tr>
+</tbody>
+</table>
+<p>A consulta após a inserção mostra o Monitor entre os produtos cadastrados.</p>
+<h2 id="4-atualizacao-update">4. Atualização — UPDATE</h2>
+<p><code>UPDATE</code> altera registros existentes. <code>SET</code> define os novos valores, e <code>WHERE</code> seleciona o registro.</p>
+<p>Repetimos a atualização do trabalho anterior:</p>
+<pre><code class="language-sql">UPDATE loja_bronze.produtos
+SET preco = 59.90,
+    estoque = 15
+WHERE id_produto = 1;
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>Campo do Mouse</th>
+<th style="text-align: right;">Antes</th>
+<th style="text-align: right;">Depois</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Preço</td>
+<td style="text-align: right;">R$ 49,90</td>
+<td style="text-align: right;">R$ 59,90</td>
+</tr>
+<tr>
+<td>Estoque</td>
+<td style="text-align: right;">20</td>
+<td style="text-align: right;">15</td>
+</tr>
+</tbody>
+</table>
+<p>O <code>WHERE</code> limita a atualização ao Mouse. Sem essa condição, todos os produtos receberiam os valores definidos no <code>SET</code>.</p>
+<p>A quantidade de produtos permanece onze.</p>
+<h2 id="5-exclusao-delete">5. Exclusão — DELETE</h2>
+<p><code>DELETE FROM</code> remove registros da versão atual da tabela.</p>
+<p>Repetimos a exclusão da Caneta:</p>
+<pre><code class="language-sql">DELETE FROM loja_bronze.produtos
+WHERE id_produto = 4;
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>Situação</th>
+<th style="text-align: right;">Quantidade de produtos</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Antes do DELETE</td>
+<td style="text-align: right;">11</td>
+</tr>
+<tr>
+<td>Depois do DELETE</td>
+<td style="text-align: right;">10</td>
+</tr>
+</tbody>
+</table>
+<p>A tabela continua existindo. Apenas a Caneta é removida, e o Monitor inserido permanece.</p>
+<p>Neste conjunto de dados, a Caneta não aparece em <code>itens_pedido</code>.</p>
+<p>A exclusão do registro não significa a remoção imediata dos arquivos utilizados por versões anteriores da tabela.</p>
+<h2 id="6-historico-das-operacoes">6. Histórico das operações</h2>
+<p>Delta Lake registra as alterações no log de transações.</p>
+<p>Utilizamos:</p>
+<pre><code class="language-python">spark.sql(
+    &quot;DESCRIBE HISTORY loja_bronze.produtos&quot;
+).select(
+    &quot;version&quot;, &quot;timestamp&quot;, &quot;operation&quot;
+).show(6, truncate=False)
+</code></pre>
+<p>O resultado apresenta a versão, a data e o tipo de operação, incluindo gravações, atualizações e exclusões.</p>
+<p>Uma nova execução pode apresentar números de versão diferentes, pois o histórico continua sendo registrado.</p>
+<h2 id="7-resultado-final">7. Resultado final</h2>
+<table>
+<thead>
+<tr>
+<th>Verificação</th>
+<th>Resultado</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Monitor</td>
+<td>Cadastrado com identificador 11</td>
+</tr>
+<tr>
+<td>Mouse</td>
+<td>Preço de R$ 59,90 e estoque de 15</td>
+</tr>
+<tr>
+<td>Caneta</td>
+<td>Removida</td>
+</tr>
+<tr>
+<td>Quantidade de produtos</td>
+<td>10</td>
+</tr>
+</tbody>
+</table>
+<p>As demais tabelas mantêm suas quantidades:</p>
+<table>
+<thead>
+<tr>
+<th>Tabela</th>
+<th style="text-align: right;">Registros</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>categorias</code></td>
+<td style="text-align: right;">2</td>
+</tr>
+<tr>
+<td><code>clientes</code></td>
+<td style="text-align: right;">5</td>
+</tr>
+<tr>
+<td><code>itens_pedido</code></td>
+<td style="text-align: right;">10</td>
+</tr>
+<tr>
+<td><code>pedidos</code></td>
+<td style="text-align: right;">5</td>
+</tr>
+</tbody>
+</table>
+<p>Os notebooks utilizam verificações com <code>assert</code> para conferir os resultados esperados.</p>
+<h2 id="8-reiniciar-a-demonstracao">8. Reiniciar a demonstração</h2>
+<h3 id="repetir-somente-as-operacoes">Repetir somente as operações</h3>
+<p>Execute o notebook <code>03_dml_delta.ipynb</code> desde o início.</p>
+<p>Sua etapa de preparação restaura os dez produtos originais do CSV. Depois, as operações são executadas novamente:</p>
+<ol>
+<li>Inserção do Monitor.</li>
+<li>Atualização do Mouse.</li>
+<li>Exclusão da Caneta.</li>
+</ol>
+<p>Os CSVs do <code>landing-zone</code> e as tabelas do SQL Server permanecem como origem.</p>
+<h3 id="refazer-o-fluxo-completo">Refazer o fluxo completo</h3>
+<p>Execute os notebooks na ordem:</p>
+<table>
+<thead>
+<tr>
+<th>Notebook</th>
+<th>Preparação realizada</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>00</td>
+<td>Remove e recria as cinco tabelas do SQL Server, inserindo os dados iniciais</td>
+</tr>
+<tr>
+<td>01</td>
+<td>Substitui os CSVs do <code>landing-zone</code> pela nova extração</td>
+</tr>
+<tr>
+<td>02</td>
+<td>Sobrescreve o conteúdo atual das cinco tabelas Delta no <code>bronze</code></td>
+</tr>
+<tr>
+<td>03</td>
+<td>Restaura os produtos e executa as operações DML</td>
+</tr>
+<tr>
+<td>04</td>
+<td>Limpa e recria sua área de comparação</td>
+</tr>
+</tbody>
+</table>
+<p>Essa sequência permite começar novamente com os dados iniciais.</p>
+<h3 id="dados-e-historico">Dados e histórico</h3>
+<p>A restauração das tabelas Delta utiliza <code>overwrite</code>. Ela substitui o conteúdo atual, mas mantém o histórico sujeito às regras de retenção do Delta.</p>
+<h2 id="referencias">Referências</h2>
+<ul>
+<li><a href="https://docs.delta.io/delta-update/">Delta Lake — atualização e exclusão</a></li>
+<li><a href="https://docs.delta.io/delta-batch/">Delta Lake — leitura, gravação e histórico</a></li>
+<li><a href="https://github.com/jlsilva01/spark-delta-minio-sqlserver">Projeto-modelo do professor</a></li>
+</ul></div>
+            </div>
+        </div>
+
+        <footer class="col-md-12">
+            <hr>
+            <p>Documentation built with <a href="https://www.mkdocs.org/">MkDocs</a>.</p>
+        </footer>
+        <script src="../js/bootstrap.bundle.min.js"></script>
+        <script>
+            var base_url = "..",
+                shortcuts = {"help": 191, "next": 78, "previous": 80, "search": 83};
+        </script>
+        <script src="../js/base.js"></script>
+        <script src="../search/main.js"></script>
+
+        <div class="modal" id="mkdocs_search_modal" tabindex="-1" role="dialog" aria-labelledby="searchModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="searchModalLabel">Search</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>From here you can search these documents. Enter your search terms below.</p>
+                <form>
+                    <div class="form-group">
+                        <input type="search" class="form-control" placeholder="Search..." id="mkdocs-search-query" title="Type search term here">
+                    </div>
+                </form>
+                <div id="mkdocs-search-results" data-no-results-text="No results found"></div>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div><div class="modal" id="mkdocs_keyboard_modal" tabindex="-1" role="dialog" aria-labelledby="keyboardModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="keyboardModalLabel">Keyboard Shortcuts</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th style="width: 20%;">Keys</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="help shortcut"><kbd>?</kbd></td>
+                    <td>Open this help</td>
+                  </tr>
+                  <tr>
+                    <td class="next shortcut"><kbd>n</kbd></td>
+                    <td>Next page</td>
+                  </tr>
+                  <tr>
+                    <td class="prev shortcut"><kbd>p</kbd></td>
+                    <td>Previous page</td>
+                  </tr>
+                  <tr>
+                    <td class="search shortcut"><kbd>s</kbd></td>
+                    <td>Search</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div>
+
+    </body>
+</html>

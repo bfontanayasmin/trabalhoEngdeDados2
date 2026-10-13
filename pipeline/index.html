@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="light">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        
+        <meta name="author" content="Yasmin Bez Fontana">
+        
+        <link rel="shortcut icon" href="../img/favicon.ico">
+        <title>Pipeline de dados - Pipeline de dados com SQL Server, MinIO e Delta Lake</title>
+        <link href="../css/bootstrap.min.css" rel="stylesheet">
+        <link href="../css/fontawesome.min.css" rel="stylesheet">
+        <link href="../css/brands.min.css" rel="stylesheet">
+        <link href="../css/solid.min.css" rel="stylesheet">
+        <link href="../css/v4-font-face.min.css" rel="stylesheet">
+        <link href="../css/base.css" rel="stylesheet">
+        <link id="hljs-light" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" >
+        <link id="hljs-dark" rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github-dark.min.css" disabled>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+        <script>hljs.highlightAll();</script> 
+    </head>
+
+    <body>
+        <div class="navbar fixed-top navbar-expand-lg navbar-dark bg-primary">
+            <div class="container">
+                <a class="navbar-brand" href="..">Pipeline de dados com SQL Server, MinIO e Delta Lake</a>
+                <!-- Expander button -->
+                <button type="button" class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#navbar-collapse" aria-controls="navbar-collapse" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+
+                <!-- Expanded navigation -->
+                <div id="navbar-collapse" class="navbar-collapse collapse">
+                        <!-- Main navigation -->
+                        <ul class="nav navbar-nav">
+                            <li class="nav-item">
+                                <a href=".." class="nav-link">Contextualização</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="./" class="nav-link active" aria-current="page">Pipeline de dados</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="../operacoes/" class="nav-link">Operações em Delta Lake</a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="../tabelas/" class="nav-link">Tabelas gerenciadas e externas</a>
+                            </li>
+                        </ul>
+
+                    <ul class="nav navbar-nav ms-md-auto">
+                        <li class="nav-item">
+                            <a href="#" class="nav-link" data-bs-toggle="modal" data-bs-target="#mkdocs_search_modal">
+                                <i class="fa fa-search"></i> Search
+                            </a>
+                        </li>
+                            <li class="nav-item">
+                                <a rel="prev" href=".." class="nav-link">
+                                    <i class="fa fa-arrow-left"></i> Previous
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a rel="next" href="../operacoes/" class="nav-link">
+                                    Next <i class="fa fa-arrow-right"></i>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="https://github.com/bfontanayasmin/trabalhoBancodeDados2/edit/master/docs/pipeline.md" class="nav-link"><i class="fa-brands fa-github"></i> Edit on GitHub</a>
+                            </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="container">
+            <div class="row">
+                    <div class="col-md-3"><div class="navbar-expand-md bs-sidebar hidden-print affix" role="complementary">
+    <div class="navbar-header">
+        <button type="button" class="navbar-toggler collapsed" data-bs-toggle="collapse" data-bs-target="#toc-collapse" title="Table of Contents">
+            <span class="fa fa-angle-down"></span>
+        </button>
+    </div>
+
+    
+    <div id="toc-collapse" class="navbar-collapse collapse card bg-body-tertiary">
+        <ul class="nav flex-column">
+            
+            <li class="nav-item" data-bs-level="1"><a href="#pipeline-de-dados" class="nav-link">Pipeline de dados</a>
+              <ul class="nav flex-column">
+            <li class="nav-item" data-bs-level="2"><a href="#visao-geral" class="nav-link">Visão geral</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="2"><a href="#papel-das-ferramentas" class="nav-link">Papel das ferramentas</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="2"><a href="#1-preparacao-do-banco-de-origem" class="nav-link">1. Preparação do banco de origem</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="2"><a href="#2-descoberta-das-tabelas" class="nav-link">2. Descoberta das tabelas</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="2"><a href="#3-extracao-para-csv" class="nav-link">3. Extração para CSV</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="2"><a href="#4-armazenamento-no-landing-zone" class="nav-link">4. Armazenamento no landing-zone</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="2"><a href="#5-configuracao-do-spark-para-acessar-o-minio" class="nav-link">5. Configuração do Spark para acessar o MinIO</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="2"><a href="#6-conversao-para-delta-lake" class="nav-link">6. Conversão para Delta Lake</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="2"><a href="#7-organizacao-no-bronze" class="nav-link">7. Organização no bronze</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="2"><a href="#8-validacao-da-conversao" class="nav-link">8. Validação da conversão</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+            <li class="nav-item" data-bs-level="2"><a href="#referencias" class="nav-link">Referências</a>
+              <ul class="nav flex-column">
+              </ul>
+            </li>
+              </ul>
+            </li>
+        </ul>
+    </div>
+</div></div>
+                    <div class="col-md-9" role="main">
+
+<h1 id="pipeline-de-dados">Pipeline de dados</h1>
+<h2 id="visao-geral">Visão geral</h2>
+<p>O pipeline transporta os dados do SQL Server para o MinIO em duas etapas: primeiro como arquivos CSV e, depois, como tabelas Delta Lake.</p>
+<table>
+<thead>
+<tr>
+<th>Etapa</th>
+<th>Origem</th>
+<th>Destino</th>
+<th>Formato</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Extração</td>
+<td>Cinco tabelas do SQL Server</td>
+<td>Bucket <code>landing-zone</code></td>
+<td>CSV</td>
+</tr>
+<tr>
+<td>Conversão</td>
+<td>CSVs do <code>landing-zone</code></td>
+<td>Bucket <code>bronze</code></td>
+<td>Delta Lake</td>
+</tr>
+</tbody>
+</table>
+<h2 id="papel-das-ferramentas">Papel das ferramentas</h2>
+<table>
+<thead>
+<tr>
+<th>Ferramenta</th>
+<th>Função no projeto</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>SQL Server</td>
+<td>Armazenar as tabelas do banco de origem</td>
+</tr>
+<tr>
+<td>MinIO</td>
+<td>Armazenar os CSVs e os arquivos das tabelas Delta</td>
+</tr>
+<tr>
+<td>Docker Compose</td>
+<td>Iniciar os serviços SQL Server e MinIO</td>
+</tr>
+<tr>
+<td>pymssql</td>
+<td>Permitir a conexão do Python ao SQL Server</td>
+</tr>
+<tr>
+<td>Boto3</td>
+<td>Acessar o MinIO pela API compatível com S3</td>
+</tr>
+<tr>
+<td>Apache Spark</td>
+<td>Ler e processar os dados</td>
+</tr>
+<tr>
+<td>PySpark</td>
+<td>Permitir controlar o Spark usando Python</td>
+</tr>
+<tr>
+<td>Delta Lake</td>
+<td>Organizar os dados com controle de transações e versões</td>
+</tr>
+<tr>
+<td>UV</td>
+<td>Gerenciar o ambiente e as dependências Python</td>
+</tr>
+</tbody>
+</table>
+<p>O MinIO é executado localmente em um container. Sua interface pode ser acessada no navegador em <code>http://localhost:9021</code>.</p>
+<h2 id="1-preparacao-do-banco-de-origem">1. Preparação do banco de origem</h2>
+<p>O notebook <code>00_setup_sqlserver.ipynb</code> cria o banco <code>LojaDB</code> e suas cinco tabelas.</p>
+<p>Um exemplo do DDL é a criação de <code>categorias</code>:</p>
+<pre><code class="language-sql">CREATE TABLE dbo.categorias (
+    id_categoria INT PRIMARY KEY,
+    nome_categoria NVARCHAR(100) NOT NULL
+);
+</code></pre>
+<p>Depois, os dados fictícios são inseridos:</p>
+<pre><code class="language-sql">INSERT INTO dbo.categorias VALUES
+    (1, N'Informática'),
+    (2, N'Papelaria');
+</code></pre>
+<p>A carga respeita as dependências entre as tabelas: categorias e clientes são inseridos antes dos registros que os referenciam.</p>
+<h2 id="2-descoberta-das-tabelas">2. Descoberta das tabelas</h2>
+<p>O notebook <code>01_sqlserver_to_minio_csv.ipynb</code> consulta o catálogo do SQL Server para identificar todas as tabelas do banco:</p>
+<pre><code class="language-sql">SELECT TABLE_SCHEMA, TABLE_NAME
+FROM INFORMATION_SCHEMA.TABLES
+WHERE TABLE_TYPE = 'BASE TABLE'
+ORDER BY TABLE_SCHEMA, TABLE_NAME;
+</code></pre>
+<p>A consulta encontrou cinco tabelas, todas no schema <code>dbo</code>: <code>categorias</code>, <code>clientes</code>, <code>itens_pedido</code>, <code>pedidos</code> e <code>produtos</code>.</p>
+<p>Essa descoberta permite percorrer as tabelas existentes durante a extração.</p>
+<h2 id="3-extracao-para-csv">3. Extração para CSV</h2>
+<p>Para cada tabela, executamos um <code>SELECT</code>, recuperamos os nomes das colunas e os registros e montamos um CSV com cabeçalho.</p>
+<p>O trecho abaixo mostra a geração do conteúdo após a consulta:</p>
+<pre><code class="language-python">colunas = [coluna[0] for coluna in cursor.description]
+registros = cursor.fetchall()
+
+buffer = io.StringIO()
+escritor = csv.writer(buffer, lineterminator=&quot;\n&quot;)
+escritor.writerow(colunas)
+escritor.writerows(registros)
+
+conteudo = buffer.getvalue().encode(&quot;utf-8&quot;)
+</code></pre>
+<p>O cabeçalho identifica as colunas. A codificação UTF-8 preserva caracteres como os acentos em “Informática”.</p>
+<h2 id="4-armazenamento-no-landing-zone">4. Armazenamento no landing-zone</h2>
+<p>O bucket <code>landing-zone</code> recebe um CSV por tabela:</p>
+<table>
+<thead>
+<tr>
+<th>Arquivo</th>
+<th style="text-align: right;">Registros</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>categorias.csv</code></td>
+<td style="text-align: right;">2</td>
+</tr>
+<tr>
+<td><code>clientes.csv</code></td>
+<td style="text-align: right;">5</td>
+</tr>
+<tr>
+<td><code>itens_pedido.csv</code></td>
+<td style="text-align: right;">10</td>
+</tr>
+<tr>
+<td><code>pedidos.csv</code></td>
+<td style="text-align: right;">5</td>
+</tr>
+<tr>
+<td><code>produtos.csv</code></td>
+<td style="text-align: right;">10</td>
+</tr>
+</tbody>
+</table>
+<p>O envio é realizado pelo Boto3:</p>
+<pre><code class="language-python">s3.put_object(
+    Bucket=&quot;landing-zone&quot;,
+    Key=arquivo,
+    Body=conteudo,
+    ContentType=&quot;text/csv; charset=utf-8&quot;
+)
+</code></pre>
+<p><code>Bucket</code> identifica o espaço de armazenamento, e <code>Key</code> identifica o objeto dentro dele.</p>
+<p>Após o envio, o notebook lê os CSVs do MinIO e confere seus cabeçalhos e quantidades. A extração foi validada com <strong>cinco arquivos e 32 registros</strong>.</p>
+<h2 id="5-configuracao-do-spark-para-acessar-o-minio">5. Configuração do Spark para acessar o MinIO</h2>
+<p>O notebook <code>02_csv_to_delta.ipynb</code> inicia uma sessão Spark com suporte ao Delta Lake e ao armazenamento compatível com S3.</p>
+<p>Entre as configurações utilizadas estão:</p>
+<pre><code class="language-python">.config(
+    &quot;spark.jars.packages&quot;,
+    &quot;io.delta:delta-spark_2.12:3.2.0,&quot;
+    &quot;org.apache.hadoop:hadoop-aws:3.3.4&quot;
+)
+.config(
+    &quot;spark.sql.extensions&quot;,
+    &quot;io.delta.sql.DeltaSparkSessionExtension&quot;
+)
+.config(
+    &quot;spark.sql.catalog.spark_catalog&quot;,
+    &quot;org.apache.spark.sql.delta.catalog.DeltaCatalog&quot;
+)
+.config(
+    &quot;spark.hadoop.fs.s3a.endpoint&quot;,
+    os.environ[&quot;MINIO_ENDPOINT&quot;]
+)
+.config(&quot;spark.hadoop.fs.s3a.path.style.access&quot;, &quot;true&quot;)
+.config(&quot;spark.hadoop.fs.s3a.connection.ssl.enabled&quot;, &quot;false&quot;)
+</code></pre>
+<p>As credenciais são carregadas do arquivo <code>.env</code>. O notebook também configura a chave de acesso, a chave secreta e a implementação <code>S3AFileSystem</code>.</p>
+<p>Os caminhos com <code>s3a://</code> permitem ao Spark acessar os objetos do MinIO. Por exemplo:</p>
+<pre><code class="language-text">s3a://landing-zone/produtos.csv
+</code></pre>
+<p>Nesse caminho, <code>landing-zone</code> é o bucket e <code>produtos.csv</code> é o objeto.</p>
+<h2 id="6-conversao-para-delta-lake">6. Conversão para Delta Lake</h2>
+<p>Como CSV não registra os tipos das colunas, definimos os schemas conforme as tabelas de origem.</p>
+<p>Para produtos, utilizamos:</p>
+<pre><code class="language-python">schema_produtos = (
+    &quot;id_produto INT, nome_produto STRING, &quot;
+    &quot;preco DECIMAL(10,2), estoque INT, id_categoria INT&quot;
+)
+</code></pre>
+<p>A leitura e a gravação seguem este procedimento:</p>
+<pre><code class="language-python">dados = (
+    spark.read
+    .schema(schema_produtos)
+    .option(&quot;header&quot;, &quot;true&quot;)
+    .option(&quot;mode&quot;, &quot;FAILFAST&quot;)
+    .csv(&quot;s3a://landing-zone/produtos.csv&quot;)
+)
+
+(
+    dados.write
+    .format(&quot;delta&quot;)
+    .mode(&quot;overwrite&quot;)
+    .save(&quot;s3a://bronze/produtos&quot;)
+)
+</code></pre>
+<ul>
+<li><code>header</code> indica que o CSV possui cabeçalho.</li>
+<li><code>schema</code> define os tipos das colunas.</li>
+<li><code>FAILFAST</code> interrompe a leitura quando encontra um registro malformado.</li>
+<li><code>format("delta")</code> seleciona o formato Delta Lake.</li>
+<li><code>overwrite</code> substitui o conteúdo atual do destino, permitindo repetir a conversão.</li>
+</ul>
+<p>A conversão preserva os dados e os tipos definidos. As restrições de chave primária e estrangeira do SQL Server não são transferidas.</p>
+<h2 id="7-organizacao-no-bronze">7. Organização no bronze</h2>
+<p>Cada tabela possui seu próprio caminho:</p>
+<pre><code class="language-text">s3a://bronze/categorias
+s3a://bronze/clientes
+s3a://bronze/itens_pedido
+s3a://bronze/pedidos
+s3a://bronze/produtos
+</code></pre>
+<p>Os registros ficam em arquivos Parquet. O diretório <code>_delta_log</code> contém as informações que controlam as transações e as versões da tabela.</p>
+<h2 id="8-validacao-da-conversao">8. Validação da conversão</h2>
+<p>Para cada destino, verificamos:</p>
+<ul>
+<li>Se é uma tabela Delta válida.</li>
+<li>Se a quantidade de registros corresponde à origem.</li>
+<li>Se o schema corresponde aos tipos definidos.</li>
+</ul>
+<p>Um exemplo de leitura é:</p>
+<pre><code class="language-python">dados_delta = (
+    spark.read
+    .format(&quot;delta&quot;)
+    .load(&quot;s3a://bronze/produtos&quot;)
+)
+</code></pre>
+<p>A conversão foi validada com <strong>cinco tabelas Delta e 32 registros</strong>, antes das operações DML.</p>
+<h2 id="referencias">Referências</h2>
+<ul>
+<li><a href="https://github.com/jlsilva01/spark-delta-minio-sqlserver">Projeto-modelo do professor</a></li>
+<li><a href="https://spark.apache.org/docs/3.5.3/">Apache Spark 3.5.3</a></li>
+<li><a href="https://docs.delta.io/delta-batch/">Delta Lake — leitura e gravação de tabelas</a></li>
+<li><a href="https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/s3.html">Boto3 — cliente S3</a></li>
+<li><a href="https://pymssql.readthedocs.io/">pymssql</a></li>
+</ul></div>
+            </div>
+        </div>
+
+        <footer class="col-md-12">
+            <hr>
+            <p>Documentation built with <a href="https://www.mkdocs.org/">MkDocs</a>.</p>
+        </footer>
+        <script src="../js/bootstrap.bundle.min.js"></script>
+        <script>
+            var base_url = "..",
+                shortcuts = {"help": 191, "next": 78, "previous": 80, "search": 83};
+        </script>
+        <script src="../js/base.js"></script>
+        <script src="../search/main.js"></script>
+
+        <div class="modal" id="mkdocs_search_modal" tabindex="-1" role="dialog" aria-labelledby="searchModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="searchModalLabel">Search</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>From here you can search these documents. Enter your search terms below.</p>
+                <form>
+                    <div class="form-group">
+                        <input type="search" class="form-control" placeholder="Search..." id="mkdocs-search-query" title="Type search term here">
+                    </div>
+                </form>
+                <div id="mkdocs-search-results" data-no-results-text="No results found"></div>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div><div class="modal" id="mkdocs_keyboard_modal" tabindex="-1" role="dialog" aria-labelledby="keyboardModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="keyboardModalLabel">Keyboard Shortcuts</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th style="width: 20%;">Keys</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="help shortcut"><kbd>?</kbd></td>
+                    <td>Open this help</td>
+                  </tr>
+                  <tr>
+                    <td class="next shortcut"><kbd>n</kbd></td>
+                    <td>Next page</td>
+                  </tr>
+                  <tr>
+                    <td class="prev shortcut"><kbd>p</kbd></td>
+                    <td>Previous page</td>
+                  </tr>
+                  <tr>
+                    <td class="search shortcut"><kbd>s</kbd></td>
+                    <td>Search</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="modal-footer">
+            </div>
+        </div>
+    </div>
+</div>
+
+    </body>
+</html>
